@@ -1,0 +1,45 @@
+package main
+
+import (
+    "database/sql"
+    "net/http"
+    "github.com/gorilla/mux"
+    _ "github.com/go-sql-driver/mysql"
+)
+
+func incrementVote(w http.ResponseWriter, r *http.Request) {
+    db := dbConn()
+    defer db.Close()
+
+    vars := mux.Vars(r)
+    battleTerm := vars["battle_term"]
+    storeID := vars["store_id"]
+
+    var existingVoteID int
+    err := db.QueryRow("SELECT votes_id FROM votes WHERE battle_term = ? AND store_id = ?", battleTerm, storeID).Scan(&existingVoteID)
+
+    if err != nil && err != sql.ErrNoRows {
+        http.Error(w, err.Error(), http.StatusInternalServerError)
+        return
+    }
+
+    if err == sql.ErrNoRows {
+        // If record doesn't exist, create new one with vote count 1
+        stmt, _ := db.Prepare("INSERT INTO votes (battle_term, store_id, vote) VALUES (?, ?, 1)")
+        _, err = stmt.Exec(battleTerm, storeID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+    } else {
+        // If record exists, increment vote count
+        stmt, _ := db.Prepare("UPDATE votes SET vote = vote + 1 WHERE votes_id = ?")
+        _, err = stmt.Exec(existingVoteID)
+        if err != nil {
+            http.Error(w, err.Error(), http.StatusInternalServerError)
+            return
+        }
+    }
+    w.WriteHeader(http.StatusOK)
+}
+
