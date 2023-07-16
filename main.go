@@ -62,6 +62,8 @@ func main() {
 	router.HandleFunc("/stores", getStores).Methods("GET")
 	router.HandleFunc("/storesvotes/{battle_term}", getStoresWithVotes).Methods("GET")
 	router.HandleFunc("/incrementvote/{battle_term}/{store_id}", incrementVote).Methods("POST")
+	router.HandleFunc("/users", createUser).Methods("POST")
+	router.HandleFunc("/users/{id:[0-9]+}", updateUser).Methods("PUT")
 	log.Fatal(http.ListenAndServe(":8080", router))
 }
 // /users
