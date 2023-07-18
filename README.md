@@ -4,6 +4,7 @@ go_restapi
 ### run
 - go run *.go
 - ./restapi
+- sudo systemctl start goapi
 
 ### build
 - go build -o restapi
